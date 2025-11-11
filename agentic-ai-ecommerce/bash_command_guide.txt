@@ -1,0 +1,61 @@
+# Bash/Command Line Guide for Running Agentic AI Ecommerce Project
+
+## Initial Setup
+cd C:\Users\Public\Amol_HB\agentic-ai-ecommerce
+
+# (Make a new venv for Python 3.12)
+python -m venv venv
+venv\Scripts\activate
+
+# Upgrade pip/tools
+pip install --upgrade pip setuptools wheel
+
+# Install core scientific libraries FIRST
+pip install numpy pandas scikit-learn
+
+# Install all remaining requirements
+pip install -r requirements.txt
+
+# If needed, install torch and sentence-transformers separately
+pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+pip install --no-cache-dir sentence-transformers
+
+# Optionally, install missing dependencies for transformers/HF agents
+pip install filelock fsspec jinja2 networkx multidict propcache requests huggingface-hub==0.44.1 packaging pyyaml regex safetensors
+
+---
+## Data Preparation
+
+# Place your product CSV file here:
+./data/kaggle_ecom.csv
+
+# Convert CSV to text RAG docs
+python -m backend.rag.csv2txt
+
+# Build FAISS index for product/docs
+python -m backend.rag.ingest
+
+---
+## Running the FastAPI App
+
+# Start the backend server
+uvicorn backend.main:app --reload
+
+# The API is now available at:
+http://localhost:8000
+
+---
+## Using the Frontend
+
+# Open these files in your web browser:
+frontend/index.html   # customer chat & search
+frontend/admin.html   # admin dashboard
+
+---
+## Maintenance & Updates
+
+# To freeze your current package versions:
+pip freeze > installed_packages.txt
+
+# To document the folder structure (optional):
+tree /F > project_structure.txt
