@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Product Finder</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: Inter, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(120deg, #e0eafc 0%, #c2e9fb 100%);
+    }
+    .main-container {
+      max-width: 700px;
+      margin: 40px auto 0 auto;
+      padding: 32px 24px 32px 24px;
+      background: #fafdff;
+      border-radius: 16px;
+      box-shadow: 0 7px 32px #24304518;
+    }
+    h1 {
+      text-align: center;
+      color: #246ab6;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .chat-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .chat-msg.user {
+      background: #cfe3fa;
+      align-self: flex-end;
+      color: #345;
+      border-radius: 14px 14px 2px 14px;
+      margin-left: auto;
+    }
+    .chat-msg {
+      padding: 11px 16px;
+      border-radius: 14px 14px 14px 2px;
+      background: #f3f7fc;
+      color: #234;
+      max-width: 78%;
+      margin-right: auto;
+      font-size: 1rem;
+      box-shadow: 0 1px 5px #395a8920;
+    }
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .product-card {
+      background: #eaf6fd;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 12px #1b4b7085;
+      margin: 10px 0;
+      width: 225px;
+    }
+    .product-image {
+      width: 100%;
+      max-width: 170px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: #edf9ff;
+    }
+    .product-info h3 {
+      font-size: 1.13em;
+      margin: 0 0 4px 0;
+      color: #17498d;
+    }
+    .product-price {
+      font-size: 1.05em;
+      color: #246ab6;
+      font-weight: 600;
+    }
+    .product-meta {
+      font-size: 0.97em;
+      color: #346281;
+      margin-top: 4px;
+    }
+    .spinner { margin:30px auto; border:6px solid #b5daff; border-top:6px solid #246ab6; border-radius:50%; width:32px; height:32px; animation:spin .8s linear infinite;}
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    .input-row { margin: 30px 0 15px 0; display: flex; gap: 12px; }
+    .input-row input[type="text"] {
+      flex:1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #a9cbef;
+      font-size:1em;
+    }
+    .input-row button {
+      padding:8px 21px;
+      border:none;
+      border-radius:6px;
+      background:#246ab6;
+      color:#fff;
+      font-size:1em;
+      cursor:pointer;
+      font-weight: 500;
+      box-shadow:0 1px 2px #395a892b;
+    }
+    .error-msg {
+      color: #b6143d;
+      background: #fce4ee;
+      border-radius: 8px;
+      padding:12px;
+      text-align:center;
+      margin:12px 0;
+    }
+    .product-list {
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px;
+      margin:18px 0;
+      justify-content:center;
+    }
+    .card-meta-row { font-size:0.93em; color:#355180; margin-top: 6px;}
+    @media (max-width: 900px) {
+      .main-container { max-width: 99vw;}
+      .product-card {width:100%;}
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1>AI Product Finder</h1>
+    <div id="chatlog"></div>
+    <form id="queryform" onsubmit="sendChat(event)">
+      <div class="input-row">
+        <input type="text" id="query" placeholder="Type your product query (e.g. cheap shoes)" autocomplete="off" />
+        <button type="submit">Search</button>
+      </div>
+    </form>
+    <div id="loading" style="display:none;" class="spinner"></div>
+    <div id="error" style="display:none;" class="error-msg"></div>
+    <div id="products" class="product-list"></div>
+  </div>
+  <script>
+    let productData = [];
+    let chatLog = [];
+
+    function showLoading(show) {
+      document.getElementById("loading").style.display = show ? "block" : "none";
+    }
+    function showError(msg) {
+      const errorDiv = document.getElementById("error");
+      errorDiv.innerText = msg;
+      errorDiv.style.display = msg ? "block" : "none";
+    }
+    function addChat(text, who="bot") {
+      chatLog.push({text, who});
+      renderChat();
+    }
+    function renderChat() {
+      const chatDiv = document.getElementById("chatlog");
+      chatDiv.innerHTML = chatLog.map(({text, who}) =>
+        `<div class="chat-row"><div class="chat-msg ${who}">${text.replace(/\n/g, "<br>")}</div></div>`
+      ).join("");
+    }
+    function renderProducts(products) {
+      const prodDiv = document.getElementById("products");
+      if (!products || products.length===0) {
+        prodDiv.innerHTML = "<p style='color:#246ab6;text-align:center;'>No products found for your query.</p>";
+        return;
+      }
+      prodDiv.innerHTML = products.map(item => `
+        <div class="product-card">
+          <img class="product-image" src="${item.image_url || 'https://via.placeholder.com/160'}" alt="${item.name || 'Product'}"/>
+          <div class="product-info">
+            <h3>${item.name || '[No title]'}</h3>
+            <div class="product-price">₹${item.price}</div>
+            <div class="product-meta">${item.description || ''}</div>
+          </div>
+          <div class="card-meta-row">
+            <span><b>Source:</b> ${item.source||'Catalog'}</span>
+            <span style="float:right;"><b>Country:</b> ${item.country||''}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function sendChat(e) {
+      if (e) e.preventDefault();
+      showError("");
+      const query = document.getElementById("query").value.trim();
+      if (!query) return;
+      addChat(query, "user");
+      showLoading(true);
+      try {
+        const resp = await fetch("http://127.0.0.1:8000/api/chat", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ text: query, user_id:"user1" })
+        });
+        const data = await resp.json();
+        showLoading(false);
+        if (!data || !data.products) {
+          showError("Invalid server response. Please check backend.");
+          return;
+        }
+        addChat(data.response, "bot");
+        productData = data.products;
+        renderProducts(productData);
+      } catch (err) {
+        showLoading(false);
+        showError("Could not reach backend. Is the server running?");
+      }
+    }
+    // Optionally, load a demo chat/product on page load
+    addChat("Welcome! Type your query above to find products using AI.", "bot");
+  </script>
+</body>
+</html>

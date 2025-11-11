@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <style>
+    body {font-family:sans-serif;background:#f5f6fa;}
+    .box{max-width:920px;margin:30px auto;background:#fff;padding:36px;border-radius:18px;box-shadow:0 6px 28px #9ca3af26;}
+    h2{margin:0 0 25px 0;}
+    .stat{display:inline-block;padding:18px 36px;border-radius:12px;background:#f5f7fa;margin-right:18px;}
+    th,td{padding:8px;font-size:15px;}
+    table{border-collapse:collapse;width:100%;margin-bottom:18px;}
+    th{background:#f1f3f7;}
+    tr:nth-child(even){background:#fbfdff;}
+    .msg{margin:14px 0;font-size:15px;}
+  </style>
+</head>
+<body>
+<div class="box">
+  <h2>🛠️ Admin Dashboard</h2>
+  <button onclick="loadStats()" style="float:right;">↻ Refresh</button>
+  <div id="statsBox">
+      <div class="stat" id="statUsers">Users: --</div>
+      <div class="stat" id="statOrders">Orders: --</div>
+      <div class="stat" id="statRev">Revenue: $--</div>
+  </div>
+  <h3>Activity</h3>
+  <table><thead>
+    <tr><th>User ID</th><th>Activity</th><th>Details</th></tr></thead>
+    <tbody id="activityTable">
+      <tr><td colspan="3">Not implemented. Demo only.</td></tr>
+    </tbody>
+  </table>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+function loadStats(){
+  fetch("http://localhost:8000/api/admin/dashboard").then(r=>r.json()).then(d=>{
+    document.getElementById('statUsers').textContent = "Users: "+(d.analytics?.total_users || '--');
+    document.getElementById('statOrders').textContent = "Orders: "+(d.analytics?.total_orders || '--');
+    document.getElementById('statRev').textContent = "Revenue: $"+(d.analytics?.total_revenue || '--');
+    if(d.message) document.getElementById('msg').textContent = d.message;
+  })
+}
+window.onload=loadStats;
+</script>
+</body>
+</html>
